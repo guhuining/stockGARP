@@ -68,7 +68,7 @@ def delete_negative_value_stock_helper(stocks):
         # 计算结束时间
         end_time = datetime.datetime.now()+datetime.timedelta(-1)  # 用昨天的时间，因为今天的数据可能还没出来
     else:
-        end_time = time.strptime(Config.time, "%Y-%m-%d")
+        end_time = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
     start_time = end_time + datetime.timedelta(days=-600)
     end_time = end_time.strftime("%Y%m%d")
     start_time = start_time.strftime("%Y%m%d")
