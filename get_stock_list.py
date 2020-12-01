@@ -1,3 +1,5 @@
+import os
+
 import tushare as ts
 import numpy as np
 import pandas as pd
@@ -15,7 +17,7 @@ def get_all_stoke():
     """
     df = pd.DataFrame(columns=("ts_code", "symbol", "name"))
     if Config.now:
-        end_date = datetime.datetime.now()
+        end_date = datetime.datetime.now() - datetime.timedelta(days=-1)
     else:
         end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
     pro = ts.pro_api()
@@ -24,15 +26,13 @@ def get_all_stoke():
     for stock in stocks.values:
         if datetime.datetime.strptime(stock[3], "%Y%m%d") + datetime.timedelta(days=700) <= end_date:
             df = df.append({"ts_code": stock[0], "symbol": stock[1], "name": stock[2]}, ignore_index=True)
-    df.to_csv("data/all_stock.csv", index=False)
+    return df
 
 
-def delete_ST_stock():
+def delete_ST_stock(stocks):
     """
     去掉股票名中含有ST的股票
     """
-    # 读取所有股票列表
-    stocks = pd.read_csv("data/all_stock.csv")
     stocks = stocks.values
 
     # 去掉股票名中含"ST"的一行
@@ -41,19 +41,28 @@ def delete_ST_stock():
     df = pd.DataFrame(stocks_without_ST)
     # 重新设置表头
     df.rename(columns={0: "ts_code", 1: "symbol", 2: "name"}, inplace=True)
-    df.to_csv("data/stock_without_ST.csv", index=False)
+    return df
 
 
-def delete_negative_value_stock():
+def delete_negative_value_stock(stocks):
     """
     去掉滚动净利润为负值的股票
     """
-    # 读取去掉ST股票后的股票列表
-    stocks = pd.read_csv("data/stock_without_ST.csv")
+    if Config.now:
+        end_date = datetime.datetime.now() - datetime.timedelta(days=-1)
+    else:
+        end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+
     stocks = stocks.values
 
     stock_without_negative_value = delete_negative_value_stock_helper(stocks)  # 获取滚动净利润大于0的股票列表
-    with open("data/white_list.csv", "a", encoding="utf8") as f:
+
+    # 获取到当前文件的目录，并检查是否有该年份的文件夹，如果不存在则自动新建文件夹
+    File_Path = os.getcwd() + "/data/" + datetime.datetime.strftime(end_date, "%Y")
+    if not os.path.exists(File_Path):
+        os.makedirs(File_Path)
+
+    with open("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y")), "a", encoding="utf8") as f:
         f.write("ts_code,end_date,n_income\n")
         for stock in stock_without_negative_value:
             f.write("{},{},{}\n".format(stock[0], stock[1], stock[2]))
@@ -82,9 +91,11 @@ def delete_negative_value_stock_helper(stocks):
                                          fields="ts_code, end_date, n_income").values
                 break
             except ConnectionError as e:
+                print(e)
                 print("wait for restart")
                 time.sleep(5)
             except Exception as e:
+                print(e)
                 print("wait for restart")
                 time.sleep(5)
 
@@ -129,9 +140,9 @@ def get_roll_profit(profit_data):
 
 
 def get_stock_list():
-    get_all_stoke()
-    delete_ST_stock()
-    delete_negative_value_stock()
+    stocks = get_all_stoke()
+    stocks = delete_ST_stock(stocks)
+    delete_negative_value_stock(stocks)
 
 
 if __name__ == '__main__':
