@@ -58,11 +58,11 @@ def delete_negative_value_stock(stocks):
     stock_without_negative_value = delete_negative_value_stock_helper(stocks)  # 获取滚动净利润大于0的股票列表
 
     # 获取到当前文件的目录，并检查是否有该年份的文件夹，如果不存在则自动新建文件夹
-    File_Path = os.getcwd() + "/data/" + datetime.datetime.strftime(end_date, "%Y")
+    File_Path = os.getcwd() + "/data/" + datetime.datetime.strftime(end_date, "%Y-%m-%d")
     if not os.path.exists(File_Path):
         os.makedirs(File_Path)
 
-    with open("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y")), "a", encoding="utf8") as f:
+    with open("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d")), "a", encoding="utf8") as f:
         f.write("ts_code,end_date,n_income\n")
         for stock in stock_without_negative_value:
             f.write("{},{},{}\n".format(stock[0], stock[1], stock[2]))
