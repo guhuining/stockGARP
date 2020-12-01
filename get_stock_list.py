@@ -128,11 +128,11 @@ def get_roll_profit(profit_data):
     return profit
 
 
-def select_stock():
+def get_stock_list():
     get_all_stoke()
     delete_ST_stock()
     delete_negative_value_stock()
 
 
 if __name__ == '__main__':
-    select_stock()
+    get_stock_list()
