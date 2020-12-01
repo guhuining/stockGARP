@@ -97,7 +97,7 @@ def delete_negative_value_stock_helper(stocks):
             except Exception as e:
                 print(e)
                 print("wait for restart")
-                time.sleep(5)
+                time.sleep(20)
 
         # 计算净利润，若大于0则返回
         try:
