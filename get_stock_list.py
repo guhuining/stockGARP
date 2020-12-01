@@ -63,7 +63,7 @@ def delete_negative_value_stock(stocks):
         os.makedirs(File_Path)
 
     with open("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d")), "a", encoding="utf8") as f:
-        f.write("ts_code,end_date,n_income\n")
+        f.write("ts_code,symbol,name\n")
         for stock in stock_without_negative_value:
             f.write("{},{},{}\n".format(stock[0], stock[1], stock[2]))
 
