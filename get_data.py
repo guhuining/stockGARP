@@ -103,6 +103,23 @@ def get_epsg(ts_code, start_date, end_date):
     return epsg
 
 
+def get_period_data(period, n):
+    """
+    @param  period  每次获取数据的间隔
+    @param  n       获取数据的次数
+    """
+    date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    for i in range(n):
+        get_data(date)
+        date += datetime.timedelta(days=period)
+
+
+def main():
+    period = int(input("请输入获取数据的时间间隔："))
+    n = int(input("请输入获取数据的时间段个数："))
+    get_period_data(period, n)
+
+
 if __name__ == '__main__':
     pro = ts.pro_api()
-    get_data(datetime.datetime.strptime("2018-12-01", "%Y-%m-%d"))
+    main()
