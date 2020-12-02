@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import datetime
 import time
+import os
 
 from config import Config
 
@@ -60,7 +61,9 @@ def get_data(date):
                 print(e)
                 time.sleep(5)
             time.sleep(1)
-    stock_data.to_csv("data/{}/{}.csv".format(
+    if "stock_data" not in os.listdir("data/{}".format(datetime.datetime.strftime(data_date, "%Y-%m-%d"))):
+        os.mkdir("data/{}/stock_data".format(datetime.datetime.strftime(data_date, "%Y-%m-%d")))
+    stock_data.to_csv("data/{}/stock_data/{}.csv".format(
         datetime.datetime.strftime(data_date, "%Y-%m-%d"),
         datetime.datetime.strftime(date, "%Y-%m-%d")
     ))
