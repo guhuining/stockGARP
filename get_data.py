@@ -108,7 +108,7 @@ def get_period_data(period, n):
     @param  period  每次获取数据的间隔
     @param  n       获取数据的次数
     """
-    date = datetime.datetime.strptime(Config.stock_list_date, "%Y-%m-%d")
+    date = datetime.datetime.strptime(Config.get_data_date, "%Y-%m-%d")
     for i in range(n):
         get_data(date)
         date += datetime.timedelta(days=period)

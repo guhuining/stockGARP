@@ -2,5 +2,5 @@ import datetime
 
 
 class Config:
-    now = True
-    time = "2020-11-25"
+    stock_list_date = "2018-12-01"
+    get_data_date = "2018-12-31"
