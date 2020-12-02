@@ -8,15 +8,19 @@ from config import Config
 
 
 def get_data():
-    stock_list = pd.read_csv("data/white_list.csv").values  # 读取白名单
     stock_data = pd.DataFrame(columns=("ts_code", "stock_name", "pe", "roe", "nprg", "mbrg", "epsg"))
     if Config.now:
-        trade_date = (datetime.datetime.now() + datetime.timedelta(days=-1)).strftime("%Y%m%d")  # 用昨天的时间，因为今天的数据可能还没出来
-        start_date = (datetime.datetime.now() + datetime.timedelta(days=-700)).strftime("%Y%m%d")
+        end_date = datetime.datetime.now() + datetime.timedelta(-1)  # 用昨天的时间，因为今天的数据可能还没出来
+        start_date = datetime.datetime.now() + datetime.timedelta(days=-700)
     else:
-        trade_date = ''.join(Config.time.split("-"))
-        start_date = (datetime.datetime.strptime(trade_date, "%Y%m%d") + datetime.timedelta(days=-700)).strftime(
-            "%Y%m%d")
+        end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+        start_date = end_date + datetime.timedelta(days=-700)
+
+    stock_list = pd.read_csv("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d"))). \
+        values  # 读取白名单
+
+    trade_date = pro.trade_cal(end_date=end_date.strftime("%Y%m%d"), fields="pretrade_date").values[::-1][0][0]
+    trade_date = datetime.datetime.strptime(trade_date, "%Y%m%d")
 
     for stock in stock_list:
         while True:
@@ -24,9 +28,9 @@ def get_data():
                 ts_code = stock[0]
                 stock_name = stock[2]
                 # 价值指标pe,roe
-                pe = pro.daily_basic(ts_code=ts_code, trade_date=trade_date, fields="pe").values[0][0]
-                roe = pro.fina_indicator(ts_code=ts_code, start_date=start_date, end_date=trade_date,
-                                         fields="roe").values[0][0]
+                pe = pro.daily_basic(ts_code=ts_code, trade_date=trade_date.strftime("%Y%m%d"), fields="pe").values[0][0]
+                roe = pro.fina_indicator(ts_code=ts_code, start_date=start_date.strftime("%Y%m%d"),
+                                         end_date=trade_date.strftime("%Y%m%d"), fields="roe").values[0][0]
                 # 成长指标nprg,mbrg
                 # nprg
                 nprg = get_nprg(ts_code, start_date, trade_date)
@@ -43,11 +47,12 @@ def get_data():
                 break
             except ConnectionError as e:
                 print("wait for restart")
-                time.sleep(5)
+                time.sleep(10)
             except ZeroDivisionError as e:
                 print("该股上期每股收益为0，没有价值")
                 break
-            except IndexError:
+            except IndexError as e:
+                print(e)
                 print("财报不完整，暂不考虑")
                 break
             except Exception as e:
@@ -55,12 +60,12 @@ def get_data():
                 print(e)
                 time.sleep(5)
             time.sleep(1)
-    stock_data.to_csv("data/stock_data.csv")
+    stock_data.to_csv("data/{}/stock_data.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d")))
 
 
 def get_nprg(ts_code, start_date, end_date):
-    nprg_data = pro.income(ts_code=ts_code, start_date=start_date, end_date=end_date,
-                           fields="ann_date, n_income").values
+    nprg_data = pro.income(ts_code=ts_code, start_date=start_date.strftime("%Y%m%d"),
+                           end_date=end_date.strftime("%Y%m%d"), fields="ann_date, n_income").values
     income_1 = nprg_data[0][1]
     income_1_date = nprg_data[0][0]
     income_2 = income_1
@@ -73,8 +78,8 @@ def get_nprg(ts_code, start_date, end_date):
 
 
 def get_mbrg(ts_code, start_date, end_date):
-    mbrg_data = pro.fina_mainbz(ts_code=ts_code, start_date=start_date, end_date=end_date,
-                                fields="end_date, bz_sales")
+    mbrg_data = pro.fina_mainbz(ts_code=ts_code, start_date=start_date.strftime("%Y%m%d"),
+                                end_date=end_date.strftime("%Y%m%d"), fields="end_date, bz_sales")
     mbrg_data = mbrg_data.groupby("end_date").agg("sum")[::-1].values
     # 主营业务收入只有年报和半年报
     mbrg = (mbrg_data[0][0] - mbrg_data[2][0]) / mbrg_data[2][0]
@@ -82,11 +87,11 @@ def get_mbrg(ts_code, start_date, end_date):
 
 
 def get_epsg(ts_code, start_date, end_date):
-    epsg_data = pro.fina_indicator(ts_code=ts_code, start_date=start_date, end_date=end_date,
-                                   fields="end_date, eps")
+    epsg_data = pro.fina_indicator(ts_code=ts_code, start_date=start_date.strftime("%Y%m%d"),
+                                   end_date=end_date.strftime("%Y%m%d"), fields="end_date, eps")
     epsg_data = epsg_data.groupby("end_date", as_index=False).mean()[::-1].values
     if epsg_data[0][0][-4:] == "1231":  # 代表当前季度的报告是年报，需要计算后得出结果
-        epsg = (epsg_data[0][1] - epsg_data[1][1]*2 - epsg_data[2][1] - epsg_data[3][1]) / epsg_data[1][1]
+        epsg = (epsg_data[0][1] - epsg_data[1][1] * 2 - epsg_data[2][1] - epsg_data[3][1]) / epsg_data[1][1]
     elif epsg_data[0][0][-4:] == "0331":  # 上一个季度的报告是年报，需要计算
         last_season_epsg = (epsg_data[1][1] - epsg_data[2][1] - epsg_data[3][1] - epsg_data[4][1])
         epsg = (epsg_data[0][1] - last_season_epsg) / last_season_epsg
