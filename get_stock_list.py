@@ -16,10 +16,7 @@ def get_all_stoke():
     :return:
     """
     df = pd.DataFrame(columns=("ts_code", "symbol", "name"))
-    if Config.now:
-        end_date = datetime.datetime.now() - datetime.timedelta(days=-1)
-    else:
-        end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
     pro = ts.pro_api()
     stocks = pro.stock_basic(fields="ts_code,symbol,name,list_date")
     # 去掉上市日期短于700天的股票
@@ -48,10 +45,7 @@ def delete_negative_value_stock(stocks):
     """
     去掉滚动净利润为负值的股票
     """
-    if Config.now:
-        end_date = datetime.datetime.now() - datetime.timedelta(days=-1)
-    else:
-        end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
 
     stocks = stocks.values
 
@@ -73,11 +67,7 @@ def delete_negative_value_stock_helper(stocks):
     :param stocks numpy.array
     :return: 滚动净利润为正的股票
     """
-    if Config.now:  # 以当前时间为准，否则使用Config.end_time
-        # 计算结束时间
-        end_time = datetime.datetime.now()+datetime.timedelta(-1)  # 用昨天的时间，因为今天的数据可能还没出来
-    else:
-        end_time = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    end_time = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
     start_time = end_time + datetime.timedelta(days=-600)
     end_time = end_time.strftime("%Y%m%d")
     start_time = start_time.strftime("%Y%m%d")

@@ -9,12 +9,9 @@ from config import Config
 
 def get_data():
     stock_data = pd.DataFrame(columns=("ts_code", "stock_name", "pe", "roe", "nprg", "mbrg", "epsg"))
-    if Config.now:
-        end_date = datetime.datetime.now() + datetime.timedelta(-1)  # 用昨天的时间，因为今天的数据可能还没出来
-        start_date = datetime.datetime.now() + datetime.timedelta(days=-700)
-    else:
-        end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
-        start_date = end_date + datetime.timedelta(days=-700)
+
+    end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    start_date = end_date + datetime.timedelta(days=-700)
 
     stock_list = pd.read_csv("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d"))). \
         values  # 读取白名单
