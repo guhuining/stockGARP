@@ -7,16 +7,19 @@ import time
 from config import Config
 
 
-def get_data():
+def get_data(date):
+    """
+    @param date datetime.datetime 某个时间点，获取这个时间点的数据
+    """
     stock_data = pd.DataFrame(columns=("ts_code", "stock_name", "pe", "roe", "nprg", "mbrg", "epsg"))
 
-    end_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
-    start_date = end_date + datetime.timedelta(days=-700)
+    data_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")  # 获取的股票列表的日期，即保存数据的文件夹名称
+    start_date = date + datetime.timedelta(days=-700)
 
-    stock_list = pd.read_csv("data/{}/white_list.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d"))). \
+    stock_list = pd.read_csv("data/{}/white_list.csv".format(datetime.datetime.strftime(data_date, "%Y-%m-%d"))). \
         values  # 读取白名单
 
-    trade_date = pro.trade_cal(end_date=end_date.strftime("%Y%m%d"), fields="pretrade_date").values[::-1][0][0]
+    trade_date = pro.trade_cal(end_date=date.strftime("%Y%m%d"), fields="pretrade_date").values[::-1][0][0]
     trade_date = datetime.datetime.strptime(trade_date, "%Y%m%d")
 
     for stock in stock_list:
@@ -57,7 +60,10 @@ def get_data():
                 print(e)
                 time.sleep(5)
             time.sleep(1)
-    stock_data.to_csv("data/{}/stock_data.csv".format(datetime.datetime.strftime(end_date, "%Y-%m-%d")))
+    stock_data.to_csv("data/{}/{}.csv".format(
+        datetime.datetime.strftime(data_date, "%Y-%m-%d"),
+        datetime.datetime.strftime(date, "%Y-%m-%d")
+    ))
 
 
 def get_nprg(ts_code, start_date, end_date):
@@ -99,4 +105,4 @@ def get_epsg(ts_code, start_date, end_date):
 
 if __name__ == '__main__':
     pro = ts.pro_api()
-    get_data()
+    get_data(datetime.datetime.strptime("2018-12-01", "%Y-%m-%d"))
