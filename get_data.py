@@ -13,7 +13,7 @@ def get_data(date):
     """
     stock_data = pd.DataFrame(columns=("ts_code", "stock_name", "pe", "roe", "nprg", "mbrg", "epsg"))
 
-    data_date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")  # 获取的股票列表的日期，即保存数据的文件夹名称
+    data_date = datetime.datetime.strptime(Config.stock_list_date, "%Y-%m-%d")  # 获取的股票列表的日期，即保存数据的文件夹名称
     start_date = date + datetime.timedelta(days=-700)
 
     stock_list = pd.read_csv("data/{}/white_list.csv".format(datetime.datetime.strftime(data_date, "%Y-%m-%d"))). \
@@ -108,7 +108,7 @@ def get_period_data(period, n):
     @param  period  每次获取数据的间隔
     @param  n       获取数据的次数
     """
-    date = datetime.datetime.strptime(Config.time, "%Y-%m-%d")
+    date = datetime.datetime.strptime(Config.stock_list_date, "%Y-%m-%d")
     for i in range(n):
         get_data(date)
         date += datetime.timedelta(days=period)
