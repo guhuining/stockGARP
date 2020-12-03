@@ -12,11 +12,11 @@ def score(df, index, ascending):
     @param index 需要打分的字段
     @param ascending 是否升序
     """
-    copy = df.sort_values(by=index, ascending=ascending)
-    count = len(copy)
+    df_copy = df.sort_values(by=index, ascending=ascending)
+    count = len(df_copy)
     scores = dict()
     i = count  # 记录股票位置
-    for index, row in copy.iterrows():
+    for index, row in df_copy.iterrows():
         scores[row["ts_code"]] = int(i / count * 100)  # 排名越靠前分数越高
         i -= 1
     return scores
@@ -59,11 +59,14 @@ def select():
 
         # 交叉选股
         file_name = path[:-4] + "stock_list.csv"  # 保存对应日期的股票列表文件名
-        with open("data/{}/stock_data/{}".format(Config.stock_list_date, file_name), "w") as f:
+        if not os.path.exists("data/{}/stock_list".format(Config.stock_list_date)):
+            os.mkdir("data/{}/stock_list".format(Config.stock_list_date))
+        with open("data/{}/stock_list/{}".format(Config.stock_list_date, file_name), "w") as f:
             f.write("ts_code\n")
             for ts_code in value_stock_list:
                 if ts_code in grow_stock_list:
                     f.write("{}\n".format(ts_code))
+        print("{} done".format(file_name[:-4]))
 
 
 if __name__ == '__main__':
