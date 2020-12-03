@@ -50,9 +50,9 @@ def select():
         grow_score.sort(key=lambda x: x[1], reverse=True)
 
         length = len(grow_score)
-        # 取前20%的股票
-        value_score = value_score[:length // 5]
-        grow_score = grow_score[:length // 5]
+        # 取前15%的股票
+        value_score = value_score[:int(length*0.15)]
+        grow_score = grow_score[:int(length*0.15)]
 
         value_stock_list = [i[0] for i in value_score]
         grow_stock_list = [i[0] for i in grow_score]
